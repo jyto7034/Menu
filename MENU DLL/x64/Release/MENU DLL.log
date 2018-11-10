@@ -1,0 +1,3 @@
+﻿  Main.cpp
+c:\users\blasterdinray\source\repos\menu dll\menu dll\main.h(27): error C2375: 'WinMain': 재정의. 링크가 다릅니다.
+  c:\program files (x86)\windows kits\10\include\10.0.17134.0\um\winbase.h(912): note: 'WinMain' 선언을 참조하십시오.
