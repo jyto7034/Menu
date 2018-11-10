@@ -10,5 +10,5 @@ Main.cpp 는 현재 액티브 상태인 익스플로러를 찾은다음 선택�
 
 It is a project that adds some functions to the menu that comes out when you right click.
 
-The Main.cpp is find active explorer than detect selected file or folder and save them of path to .txt extension
+The Main.cpp is find active explorer then detect selected file or folder and save them of path to .txt extension
 Python reads the saved txt extension and move them.
