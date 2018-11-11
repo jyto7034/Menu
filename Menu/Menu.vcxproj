@@ -72,8 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\NEW\AppData\Local\Programs\Python\Python37-32\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\NEW\AppData\Local\Programs\Python\Python37-32\libs;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\BlasterDinray\AppData\Local\Programs\Python\Python37-32\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\BlasterDinray\AppData\Local\Programs\Python\Python37-32\include;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -142,6 +142,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Note.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Main.h" />
+    <ClInclude Include="Note.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
