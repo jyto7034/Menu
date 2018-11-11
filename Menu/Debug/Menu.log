@@ -1,3 +1,3 @@
 ﻿  Main.cpp
-h:\menu\menu\main.cpp(230): warning C4101: 'hdc' :참조되지 않은 지역 변수입니다.
+h:\menu\menu\main.cpp(233): warning C4101: 'hdc' :참조되지 않은 지역 변수입니다.
   Menu.vcxproj -> H:\Menu\Debug\Menu.exe

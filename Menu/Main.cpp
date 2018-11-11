@@ -200,7 +200,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance
 	WNDCLASS WndClass;
 	g_hInst = hInstance;
 
-
 	WndClass.cbClsExtra = 0;
 	WndClass.cbWndExtra = 0;
 	WndClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
@@ -216,7 +215,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance
 	hWnd = CreateWindow(lpszClass, TEXT("Detector"), WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		NULL, (HMENU)NULL, hInstance, NULL);
-	ShowWindow(hWnd, SW_SHOWMINIMIZED);
+	ShowWindow(hWnd, nCmdShow);
+	SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+	//SetLayeredWindowAttributes(hWnd, RGB(255, 255, 255), 0, LWA_COLORKEY);
+	SetLayeredWindowAttributes(hWnd, 0, 0, LWA_ALPHA);
 
 
 	while (GetMessage(&Message, 0, 0, 0)) {
