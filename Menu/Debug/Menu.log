@@ -1,3 +1,6 @@
 ﻿  Main.cpp
-h:\menu\menu\main.cpp(233): warning C4101: 'hdc' :참조되지 않은 지역 변수입니다.
+h:\menu\menu\main.cpp(232): warning C4101: 'hdc' :참조되지 않은 지역 변수입니다.
+h:\menu\menu\main.cpp(377): warning C4101: 'Return' :참조되지 않은 지역 변수입니다.
+h:\menu\menu\main.cpp(376): warning C4101: 'Temp' :참조되지 않은 지역 변수입니다.
+h:\menu\menu\main.cpp(395): warning C4715: 'Detect': 모든 제어 경로에서 값을 반환하지는 않습니다.
   Menu.vcxproj -> H:\Menu\Debug\Menu.exe

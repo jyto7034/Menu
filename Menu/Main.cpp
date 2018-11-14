@@ -177,6 +177,11 @@
 #include <shlwapi.h>
 #include <iostream>
 
+#ifdef _UNICODE
+#define _T(x)      L ## x
+#else /* _UNICODE */
+#define _T(x)      x
+#endif /* _UNICODE */
 
 #pragma comment(linker,"/entry:WinMainCRTStartup /subsystem:console")
 #pragma comment(lib, "Shlwapi.lib")
@@ -188,8 +193,7 @@ HINSTANCE g_hInst;
 LPCWSTR lpszClass = TEXT("TextOut");
 
 BOOL OnCreate(HWND hwnd, LPCREATESTRUCT lpcs);
-void CALLBACK RecalcText(HWND hwnd, UINT, UINT_PTR, DWORD);
-void PaintContent(HWND hwnd, PAINTSTRUCT *pps);
+char* Detect(HWND hwnd, UINT, UINT_PTR, DWORD);
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance
 	, LPSTR lpszCmdParam, int nCmdShow)
@@ -242,96 +246,173 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	return(DefWindowProc(hWnd, iMessage, wParam, lParam));
 }
 
+
+char* test(IFolderView *pfv, IPersistFolder2 *ppf2) {
+	int iFocus;
+
+	TCHAR tg_szPath[MAX_PATH];
+	TCHAR tg_szItem[MAX_PATH];
+	char tpath[MAX_PATH];
+	char tname[MAX_PATH];
+
+	if (SUCCEEDED(pfv->GetFocusedItem(&iFocus))) {
+		LPITEMIDLIST pidlItem;
+		if (SUCCEEDED(pfv->Item(iFocus, &pidlItem))) {
+			IShellFolder *psf;
+			if (SUCCEEDED(ppf2->QueryInterface(IID_IShellFolder,
+				(void**)&psf))) {
+				STRRET str;
+				if (SUCCEEDED(psf->GetDisplayNameOf(pidlItem,
+					SHGDN_INFOLDER,
+					&str))) {
+					StrRetToBuf(&str, pidlItem, tg_szItem, MAX_PATH);
+					WideCharToMultiByte(CP_ACP, 0, tg_szPath, MAX_PATH, tpath, MAX_PATH, NULL, NULL);
+					WideCharToMultiByte(CP_ACP, 0, tg_szItem, MAX_PATH, tname, MAX_PATH, NULL, NULL);
+					detectedCount++;
+					cout << iFocus << endl;
+				}
+				else {
+					cout << "GetDisplayName" << endl;
+				}
+				psf->Release();
+			}
+			else {
+				cout << "QueryInterface" << endl;
+			}
+			CoTaskMemFree(pidlItem);
+		}
+		else {
+			cout << "Item" << endl;
+		}
+	}
+	else {
+		cout << "GetFocusedItem" << endl;
+	}
+
+	char* c = strcat(strcat(tpath, "\\"), tname);
+	LPSTR d;
+	WideCharToMultiByte(CP_ACP, MB_PRECOMPOSED, c, MAX_PATH, d, MAX_PATH, NULL, NULL);
+	MoveFile(d, d);
+}
+
 TCHAR g_szPath[MAX_PATH];
 TCHAR g_szItem[MAX_PATH];
 char path[10][MAX_PATH];
+char name[10][MAX_PATH];
 
-void CALLBACK RecalcText(HWND hwnd, UINT, UINT_PTR, DWORD)
+int detectedCount = 0;
+
+char* Detect(HWND , UINT, UINT_PTR, DWORD)
 {
-	cout<<"Entry";
+	cout << "Entry";
 	HWND hwndFind = GetForegroundWindow();
 	g_szPath[0] = TEXT('\0');
 	g_szItem[0] = TEXT('\0');
 	IShellWindows *psw;
-	if (SUCCEEDED(CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_ALL,
-		IID_IShellWindows, (void**)&psw))) {
-		VARIANT v;
-		V_VT(&v) = VT_I4;
-		IDispatch  *pdisp;
-		BOOL fFound = FALSE;
-		for (V_I4(&v) = 0; !fFound && psw->Item(v, &pdisp) == S_OK;
-			V_I4(&v)++) {
-			IWebBrowserApp *pwba;
-			if (SUCCEEDED(pdisp->QueryInterface(IID_IWebBrowserApp, (void**)&pwba))) {
-				HWND hwndWBA;
-				if (SUCCEEDED(pwba->get_HWND((LONG_PTR*)&hwndWBA)) &&
-					hwndWBA == hwndFind) {
-					fFound = TRUE;
-					IServiceProvider *psp;
-					if (SUCCEEDED(pwba->QueryInterface(IID_IServiceProvider, (void**)&psp))) {
-						IShellBrowser *psb;
-						if (SUCCEEDED(psp->QueryService(SID_STopLevelBrowser,
-							IID_IShellBrowser, (void**)&psb))) {
-							IShellView *psv;
-							if (SUCCEEDED(psb->QueryActiveShellView(&psv))) {
-								IFolderView *pfv;
-								if (SUCCEEDED(psv->QueryInterface(IID_IFolderView,
-									(void**)&pfv))) {
-									IPersistFolder2 *ppf2;
-									if (SUCCEEDED(pfv->GetFolder(IID_IPersistFolder2,
-										(void**)&ppf2))) {
-										LPITEMIDLIST pidlFolder;
-										if (SUCCEEDED(ppf2->GetCurFolder(&pidlFolder))) {
-											if (!SHGetPathFromIDList(pidlFolder, g_szPath)) {
-												lstrcpyn(g_szPath, TEXT("<not a directory>"), MAX_PATH);
-											}
-											int iFocus;
-											if (SUCCEEDED(pfv->GetFocusedItem(&iFocus))) {
-												LPITEMIDLIST pidlItem;
-												if (SUCCEEDED(pfv->Item(iFocus, &pidlItem))) {
-													IShellFolder *psf;
-													if (SUCCEEDED(ppf2->QueryInterface(IID_IShellFolder,
-														(void**)&psf))) {
-														STRRET str;
-														if (SUCCEEDED(psf->GetDisplayNameOf(pidlItem,
-															SHGDN_INFOLDER,
-															&str))) {
-															StrRetToBuf(&str, pidlItem, g_szItem, MAX_PATH);
-															WideCharToMultiByte(CP_ACP, 0, g_szPath, MAX_PATH, path[0], MAX_PATH, NULL, NULL);
-															cout << " : " << path[0];
-														}
-														psf->Release();
-													}
-													CoTaskMemFree(pidlItem);
+		if (SUCCEEDED(CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_ALL,
+			IID_IShellWindows, (void**)&psw))) {
+			VARIANT v;
+			V_VT(&v) = VT_I4;
+			IDispatch  *pdisp;
+			BOOL fFound = FALSE;
+			for (V_I4(&v) = 0; !fFound && psw->Item(v, &pdisp) == S_OK;
+				V_I4(&v)++) {
+				IWebBrowserApp *pwba;
+				if (SUCCEEDED(pdisp->QueryInterface(IID_IWebBrowserApp, (void**)&pwba))) {
+					HWND hwndWBA;
+					if (SUCCEEDED(pwba->get_HWND((LONG_PTR*)&hwndWBA)) &&
+						hwndWBA == hwndFind) {
+						fFound = TRUE;
+						IServiceProvider *psp;
+						if (SUCCEEDED(pwba->QueryInterface(IID_IServiceProvider, (void**)&psp))) {
+							IShellBrowser *psb;
+							if (SUCCEEDED(psp->QueryService(SID_STopLevelBrowser,
+								IID_IShellBrowser, (void**)&psb))) {
+								IShellView *psv;
+								if (SUCCEEDED(psb->QueryActiveShellView(&psv))) {
+									IFolderView *pfv;
+									if (SUCCEEDED(psv->QueryInterface(IID_IFolderView,
+										(void**)&pfv))) {
+										IPersistFolder2 *ppf2;
+										if (SUCCEEDED(pfv->GetFolder(IID_IPersistFolder2,
+											(void**)&ppf2))) {
+											LPITEMIDLIST pidlFolder;
+											if (SUCCEEDED(ppf2->GetCurFolder(&pidlFolder))) {
+												if (!SHGetPathFromIDList(pidlFolder, g_szPath)) {
+													lstrcpyn(g_szPath, TEXT("<not a directory>"), MAX_PATH);
 												}
+												int iFocus;
+												CoTaskMemFree(pidlFolder);
 											}
-											CoTaskMemFree(pidlFolder);
+											else {
+												cout << "GetCurFolder" << endl;
+											}
+											ppf2->Release();
 										}
-										ppf2->Release();
+										else {
+											cout << "GetFolde" << endl;
+										}
+										pfv->Release();
 									}
-									pfv->Release();
+									else {
+										cout << "QueryInterface" << endl;
+									}
+									psv->Release();
 								}
-								psv->Release();
+								else {
+									cout << "QueryActiveShellView" << endl;
+								}
+								psb->Release();
 							}
-							psb->Release();
+							else {
+								cout << "QueryService" << endl;
+							}
+							psp->Release();
 						}
-						psp->Release();
+						else {
+							cout << "QueryInterface" << endl;
+						}
 					}
+					else {
+						cout << "get_HWND" << endl;
+					}
+					pwba->Release();
 				}
-				pwba->Release();
+				else {
+					cout << "QueryInterface" << endl;
+				}
+				pdisp->Release();
 			}
-			pdisp->Release();
+			psw->Release();
 		}
-		psw->Release();
+		else {
+			cout << "No found";
+		}
+
+	char Temp[10][MAX_PATH];
+	char Return[MAX_PATH * 10];
+
+	for (int i = 0; 10 > i; i++) {
+		if (name[i] == " " || path[i] == " ") break;
+		cout << "name : " << name[i] << endl;
+		cout << "path   : " << path[i] << endl << endl;
 	}
-	else {
-		cout << "No found";
-	}
+	//for (int i = 0; 10 > i; i++) {
+	//	cout << "name : " << name[i] << endl;
+	//	cout << "path   : " << path[i] << endl << endl;
+
+	//	if (name[i] == NULL || path[i] == NULL) break;
+
+	//	strcpy(Temp[i], strcat(strcat(path[i], "\\"), name[i]));
+	//	cout << "Temp : " << Temp[i] << endl << endl;
+	//	strcat(strcpy(Return, strcat(Temp[i], "\\")), "/");
+	//}
+	//cout << "Return : " << Return << endl << endl << endl;
 }
 
 BOOL
 OnCreate(HWND hwnd, LPCREATESTRUCT lpcs)
 {
-	SetTimer(hwnd, 1, 1000, (TIMERPROC)RecalcText);
+	SetTimer(hwnd, 1, 10000, (TIMERPROC)Detect);
 	return TRUE;
 }
